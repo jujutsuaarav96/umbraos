@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UmbraOS — Your AI, Runs Locally</title>
+  <meta name="description" content="AI that runs on your machine or in the cloud. Private, fast, and free. Download UmbraOS for Windows, macOS, and Linux.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Syne:wght@600;700;800&family=Geist:wght@350;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+      --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+      --c-void:     #06060a;
+      --c-surface:  #0e0e14;
+      --c-surface-2:#14141c;
+      --c-surface-3:#1a1a24;
+      --c-rule:     #22222e;
+      --c-neutral:  #555566;
+--c-muted: #9999b0;
+      --c-ink:      #e8e6e1;
+      --c-accent:   #8b5cf6;
+      --c-accent-dim:#6d3fd4;
+      --c-frost:    rgba(255,255,255,0.06);
+      --c-frost-border: rgba(214,235,253,0.09);
+
+      --space-xs:0.25rem; --space-sm:0.5rem; --space-md:1rem;
+      --space-lg:1.5rem; --space-xl:2rem; --space-2xl:3rem;
+      --space-3xl:4.5rem; --space-4xl:6rem;
+
+      --text-xs:0.64rem; --text-sm:0.8rem; --text-base:1rem;
+      --text-md:1.25rem; --text-lg:1.5625rem; --text-xl:1.95rem;
+      --text-2xl:2.44rem; --text-3xl:3rem;
+      --text-display: clamp(2.2rem, 5vw + 0.5rem, 4.5rem);
+
+      --gutter: clamp(1rem, 4vw, 2rem);
+      --max-w: 1200px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: clip; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body); font-weight: 350;
+      font-size: var(--text-base); line-height: 1.6;
+      color: var(--c-ink); background: var(--c-void);
+      overflow-x: clip; -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ── Grain ── */
+    .grain { position:fixed; inset:0; z-index:1; pointer-events:none; opacity:0.25; mix-blend-mode:overlay; }
+    .grain::before {
+      content:''; position:absolute; inset:-50%; width:200%; height:200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size:128px 128px; animation: grain-shift 0.5s steps(4) infinite;
+    }
+    @keyframes grain-shift {
+      0%{transform:translate(0,0)} 25%{transform:translate(-5%,-5%)} 50%{transform:translate(5%,2%)} 75%{transform:translate(-2%,5%)} 100%{transform:translate(0,0)}
+    }
+
+    /* ── Star Field (freebuff-style) ── */
+    .star-field { position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+    .star {
+      position:absolute; border-radius:50%; background:#fff;
+      width: var(--s, 2px); height: var(--s, 2px);
+      opacity:0; animation: star-twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+      box-shadow: 0 0 var(--glow, 4px) var(--glow, 4px) rgba(255,255,255,0.3);
+    }
+    @keyframes star-twinkle {
+      0%,100% { opacity: var(--min, 0.2); }
+      50% { opacity: var(--max, 0.8); }
+    }
+    .shooting-star {
+      position:absolute; width:110px; height:1px; border-radius:1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 90%, rgba(255,255,255,1) 100%);
+      box-shadow: 0 0 6px rgba(255,255,255,0.5);
+      transform: rotate(var(--angle, 28deg));
+      opacity:0; animation: shoot var(--dur, 1.2s) ease-out var(--delay, 0s) infinite;
+    }
+    @keyframes shoot {
+      0% { opacity:0; transform: rotate(var(--angle, 28deg)) translate(0,0); }
+      8% { opacity:1; }
+      30% { opacity:1; }
+      100% { opacity:0; transform: rotate(var(--angle, 28deg)) translate(calc(var(--dx, 300px)), calc(var(--dy, -150px))); }
+    }
+
+    /* ── Vignette ── */
+    .vignette { position:fixed; inset:0; z-index:3; pointer-events:none; background:radial-gradient(ellipse 65% 55% at 50% 50%, transparent 0%, var(--c-void) 100%); }
+
+    /* ── Corner Glows (ZoeyOS-style ambient) ── */
+    .corner-glow {
+      position: fixed; width: 500px; height: 500px; border-radius: 50%;
+      pointer-events: none; z-index: 0; filter: blur(120px); opacity: 0.08;
+    }
+    .corner-glow--tl { top: -150px; left: -100px; background: var(--c-accent); }
+    .corner-glow--br { bottom: -150px; right: -100px; background: #3b82f6; }
+
+    /* ── Page ── */
+    .page { position: relative; z-index: 10; }
+
+    /* ── Liquid Glass ── */
+    .glass {
+      background: var(--c-frost);
+      backdrop-filter: blur(16px) saturate(130%);
+      -webkit-backdrop-filter: blur(16px) saturate(130%);
+      border: 1px solid var(--c-frost-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px -8px rgba(0,0,0,0.4);
+    }
+
+    /* ═══ NAV ═══ */
+    .nav {
+      position: fixed; top: var(--space-md); left: 50%; transform: translateX(-50%);
+      display: inline-flex; align-items: center; gap: var(--space-lg);
+      padding: 0.5rem 0.75rem 0.5rem 1.25rem;
+      border-radius: 999px; z-index: 100;
+      width: max-content; max-width: calc(100vw - 2rem);
+    }
+    .nav__logo {
+      font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm);
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-accent);
+      white-space: nowrap; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav__logo-img { height: 28px; width: 28px; object-fit: cover; border-radius: 6px; }
+    .nav__links { display: flex; align-items: center; gap: var(--space-lg); }
+    .nav__links a {
+      font-size: var(--text-sm); font-weight: 400; color: var(--c-muted);
+      transition: color 0.2s; white-space: nowrap;
+    }
+    .nav__links a:hover { color: var(--c-ink); }
+    .nav__cta {
+      font-size: var(--text-sm); font-weight: 500; padding: 0.4rem 1rem;
+      border-radius: 999px; background: var(--c-accent); color: var(--c-void);
+      white-space: nowrap; transition: background 0.2s, box-shadow 0.2s;
+    }
+    .nav__cta:hover { background: var(--c-accent-dim); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+
+    /* Hamburger */
+    .nav__hamburger {
+      display: none; background: none; border: none; cursor: pointer;
+      width: 32px; height: 32px; position: relative; z-index: 110;
+    }
+    .nav__hamburger span {
+      display: block; width: 18px; height: 1.5px; background: var(--c-ink);
+      position: absolute; left: 7px; transition: all 0.3s;
+    }
+    .nav__hamburger span:nth-child(1) { top: 10px; }
+    .nav__hamburger span:nth-child(2) { top: 15px; }
+    .nav__hamburger span:nth-child(3) { top: 20px; }
+    .nav__hamburger.active span:nth-child(1) { top: 15px; transform: rotate(45deg); }
+    .nav__hamburger.active span:nth-child(2) { opacity: 0; }
+    .nav__hamburger.active span:nth-child(3) { top: 15px; transform: rotate(-45deg); }
+
+    /* Mobile nav overlay */
+    .nav__mobile {
+      display: none; position: fixed; inset: 0; z-index: 99;
+      background: rgba(6,6,10,0.95); backdrop-filter: blur(20px);
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: var(--space-xl); opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .nav__mobile.open { opacity: 1; pointer-events: all; }
+    .nav__mobile a {
+      font-size: var(--text-xl); font-weight: 500; color: var(--c-muted);
+      transition: color 0.2s;
+    }
+    .nav__mobile a:hover { color: var(--c-ink); }
+
+    /* ═══ HERO ═══ */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: var(--space-4xl) var(--gutter) var(--space-2xl);
+      position: relative; overflow: hidden;
+    }
+    .hero__stage {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    }
+    .hero__video-wrap {
+      position: relative; width: 60vw; max-width: 900px; aspect-ratio: 16/9;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 0 80px 20px oklch(65% 0.26 260 / 0.15),
+                  0 0 160px 40px oklch(65% 0.26 260 / 0.08);
+      border: 1px solid oklch(65% 0.26 260 / 0.2);
+      min-height: 300px; flex-shrink: 0;
+    }
+    .hero__video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transform: scale(1.35); will-change: transform;
+    }
+    .hero__overlay {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(to bottom, oklch(13% 0.014 260 / 0.4) 0%, transparent 30%),
+        linear-gradient(to top, oklch(13% 0.014 260 / 0.95) 0%, oklch(13% 0.014 260 / 0.5) 12%, transparent 30%),
+        linear-gradient(to bottom, transparent 70%, oklch(13% 0.014 260 / 0.95) 100%);
+      z-index: 1; pointer-events: none;
+    }
+    .hero__side {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 120px; display: flex; flex-direction: column; gap: 12px;
+      z-index: 1; opacity: 0.5;
+    }
+    .hero__side--left { left: clamp(1rem, 4vw, 3rem); align-items: flex-start; }
+    .hero__side--right { right: clamp(1rem, 4vw, 3rem); align-items: flex-end; text-align: right; }
+    .hero__side-line {
+      width: 40px; height: 1px; background: var(--c-accent);
+    }
+    .hero__side-line--long { width: 60px; }
+    .hero__side-text {
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--c-muted);
+      letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.6;
+    }
+    .hero__side-dot {
+      width: 4px; height: 4px; border-radius: 50%; background: var(--c-accent);
+      box-shadow: 0 0 8px var(--c-accent);
+    }
+    .hero > *:not(.hero__stage):not(.hero__overlay):not(.hero__video):not(.hero__side) { position: relative; z-index: 3; }
+    .hero__logo {
+      display: block; width: 112px; height: 112px; object-fit: cover; margin: 0 auto var(--space-md);
+      border-radius: 18px;
+      filter: drop-shadow(0 0 24px rgba(96,165,250,0.35));
+    }
+    .hero__badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.35rem 1rem; border-radius: 999px; margin-bottom: var(--space-lg);
+      font-family: var(--font-mono); font-size: var(--text-xs); color: var(--c-muted);
+      letter-spacing: 0.06em;
+    }
+    .hero__badge-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
+      box-shadow: 0 0 8px #22c55e; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+    .hero__display {
+      font-family: "Black Ops One", var(--font-display); font-size: var(--text-display);
+      font-weight: 400; line-height: 1.15; letter-spacing: 0.1em; word-spacing: 0.2em;
+      max-width: 14ch; margin: 0 auto var(--space-lg);
+      overflow-wrap: break-word; word-break: break-word;
+    }
+    .hero__display .hl-char {
+      display: inline-block;
+    }
+    .hero__sub {
+      font-size: var(--text-md); color: var(--c-muted);
+      max-width: 50ch; margin: 0 auto var(--space-2xl); line-height: 1.6;
+    }
+    .hero__actions {
+      display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;
+    }
+    .hero__devices {
+      display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;
+    }
+    .device-btn {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 0.85rem 1.75rem; border-radius: 999px;
+      background: var(--c-surface); color: var(--c-ink);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-family: var(--font-body); text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      cursor: pointer;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .device-btn:hover {
+      border-color: var(--c-accent); transform: translateY(-2px);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px -8px rgba(139,92,246,0.25);
+    }
+    .device-btn--primary {
+      background: var(--c-accent); color: #fff;
+      border-color: var(--c-accent);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 8px 30px rgba(139,92,246,0.3);
+    }
+    .device-btn--primary:hover {
+      background: var(--c-accent-dim); border-color: var(--c-accent-dim);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 12px 40px -8px rgba(139,92,246,0.4);
+    }
+      box-shadow: 0 8px 30px -4px rgba(139,92,246,0.4);
+    }
+    .device-btn__text {
+      display: flex; flex-direction: column; line-height: 1.2;
+    }
+    .device-btn__label {
+      font-size: 0.65rem; opacity: 0.7; letter-spacing: 0.04em;
+    }
+    .device-btn__platform {
+      font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: var(--space-sm);
+      padding: 0.75rem 1.75rem; border-radius: 999px;
+      background: var(--c-accent); color: var(--c-void);
+      font-family: var(--font-body); font-weight: 500; font-size: var(--text-base);
+      border: none; cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover {
+      background: var(--c-accent-dim);
+      box-shadow: 0 0 30px rgba(139,92,246,0.35); transform: translateY(-1px);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: var(--space-sm);
+      padding: 0.75rem 1.75rem; border-radius: 999px;
+      background: transparent; color: var(--c-ink);
+      font-family: var(--font-body); font-weight: 400; font-size: var(--text-base);
+      border: 1px solid var(--c-rule); cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+    .hero__stats {
+      margin-top: var(--space-2xl); display: flex; gap: var(--space-2xl);
+      justify-content: center; flex-wrap: wrap;
+    }
+    .hero__stat { text-align: center; }
+    .hero__stat-num {
+      font-family: var(--font-display); font-size: var(--text-2xl);
+      font-weight: 700; color: var(--c-accent); letter-spacing: -0.02em;
+    }
+    .hero__stat-label {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--c-neutral); letter-spacing: 0.08em; text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    /* ═══ WORD TICKER (ZoeyOS-style) ═══ */
+    .ticker {
+      overflow: hidden; white-space: nowrap; padding: var(--space-lg) 0;
+      border-top: 1px solid var(--c-rule); border-bottom: 1px solid var(--c-rule);
+      margin: 0; position: relative; z-index: 10;
+    }
+    .ticker__track {
+      display: inline-flex; gap: var(--space-2xl);
+      animation: ticker-scroll 30s linear infinite;
+    }
+
+    /* ═══ PERSPECTIVE GRID (ZoeyOS-style) ═══ */
+    .grid-3d {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      perspective: 600px; overflow: hidden;
+    }
+    .grid-3d__plane {
+      position: absolute; width: 200%; height: 200%;
+      left: -50%; top: -10%;
+      transform: rotateX(68deg);
+      background-image:
+        linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 70%);
+    }
+
+    /* ═══ BROWSER CHROME (ZoeyOS-style media frame) ═══ */
+    .media-frame {
+      position: relative; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--c-rule);
+      background: var(--c-surface);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 20px 60px -12px rgba(0,0,0,0.5);
+    }
+    .media-frame__chrome {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px; background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--c-rule);
+    }
+    .media-frame__dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--c-rule);
+    }
+    .media-frame__dot:nth-child(1) { background: #ef4444; }
+    .media-frame__dot:nth-child(2) { background: #eab308; }
+    .media-frame__dot:nth-child(3) { background: #22c55e; }
+    .media-frame__body { position: relative; }
+
+    /* ═══ SCROLL HINT ═══ */
+    .scroll-hint {
+      display: flex; justify-content: center; padding: var(--space-xl) 0 var(--space-md);
+      position: relative; z-index: 10;
+    }
+    .scroll-hint__line {
+      width: 1px; height: 48px; background: linear-gradient(to bottom, var(--c-accent), transparent);
+      animation: scroll-pulse 2s ease-in-out infinite;
+    }
+    @keyframes scroll-pulse {
+      0%,100% { opacity: 0.3; transform: scaleY(0.6); transform-origin: top; }
+      50% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+    }
+    .ticker__track span {
+      font-family: var(--font-mono); font-size: var(--text-sm);
+      color: var(--c-neutral); letter-spacing: 0.06em; text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+    /* ═══ SECTION ═══ */
+    .section {
+      padding: var(--space-4xl) var(--gutter); max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .section__label {
+      font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 500;
+      letter-spacing: 0.25em; text-transform: uppercase; color: var(--c-accent);
+      margin-bottom: var(--space-sm); opacity: 0.9;
+    }
+    .section__title {
+      font-family: var(--font-display); font-size: clamp(1.75rem, 4vw, 3rem);
+      font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+      margin-bottom: var(--space-lg);
+    }
+    .section__desc {
+      font-size: var(--text-md); color: var(--c-muted);
+      max-width: 55ch; line-height: 1.6; margin-bottom: var(--space-3xl);
+    }
+    .text-accent { color: var(--c-accent); }
+
+    /* ═══ SPLIT LAYOUT (ZoeyOS-style) ═══ */
+    .split {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-3xl); align-items: center;
+    }
+    .split--reverse { direction: rtl; }
+    .split--reverse > * { direction: ltr; }
+
+    /* ═══ PILLAR CARDS (ZoeyOS-style numbered) ═══ */
+    .pillars { display: flex; flex-direction: column; gap: var(--space-md); }
+    .pillar {
+      display: flex; gap: var(--space-lg); padding: var(--space-xl);
+      border-radius: 20px; border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02); transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+      position: relative; overflow: hidden; border-left: 2px solid var(--c-accent);
+    }
+    .pillar::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: var(--c-accent); opacity: 1; transition: opacity 0.3s;
+    }
+    .pillar:hover {
+      border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+      box-shadow: 0 8px 40px -12px rgba(139,92,246,0.15);
+    }
+    .pillar:hover::before { opacity: 1; }
+    .pillar__num {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--c-accent); letter-spacing: 0.1em; flex-shrink: 0;
+      padding-top: 0.15rem;
+    }
+    .pillar__content h3 {
+      font-family: var(--font-display); font-size: var(--text-lg);
+      font-weight: 700; margin-bottom: 0.4rem;
+    }
+    .pillar__content p { font-size: var(--text-sm); color: var(--c-muted); line-height: 1.55; }
+
+    /* ═══ BENTO GRID ═══ */
+    .bento { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); }
+    .bento__cell {
+      --card-color: var(--c-accent);
+      background: rgba(255,255,255,0.02); border-radius: 20px; padding: var(--space-xl);
+      display: flex; flex-direction: column; gap: var(--space-sm);
+      transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+      border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
+    }
+    .bento__cell:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 0 40px -12px color-mix(in srgb, var(--card-color) 25%, transparent);
+      transform: translateY(-4px);
+    }
+    .bento__cell-num {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--card-color); letter-spacing: 0.1em;
+    }
+    .bento__cell-title {
+      font-family: var(--font-display); font-size: var(--text-lg);
+      font-weight: 700; letter-spacing: -0.01em; line-height: 1.2;
+    }
+    .bento__cell-desc { font-size: var(--text-sm); color: var(--c-muted); line-height: 1.55; flex: 1; }
+    .bento__cell-tech {
+      font-family: var(--font-mono); font-size: var(--text-xs); color: var(--c-neutral);
+      padding-top: var(--space-sm); border-top: 1px solid var(--c-rule); line-height: 1.5;
+    }
+    .span-2x2 { grid-column: span 2; grid-row: span 2; }
+    .span-2x1 { grid-column: span 2; }
+    .span-1x2 { grid-row: span 2; }
+
+    /* ═══ MEDIA FRAME (ZoeyOS browser-chrome) ═══ */
+    .media-frame {
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--c-rule);
+      background: var(--c-surface); position: relative;
+    }
+    .media-frame__chrome {
+      display: flex; gap: 6px; padding: 10px 14px;
+      border-bottom: 1px solid var(--c-rule);
+    }
+    .media-frame__dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--c-rule);
+    }
+    .media-frame__body {
+      aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center;
+      background: var(--c-surface-2); position: relative; overflow: hidden;
+    }
+    .media-frame__body--tall { aspect-ratio: 4/3; }
+    .media-frame__glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(139,92,246,0.08) 0%, transparent 60%);
+    }
+    .media-frame__label {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--c-neutral); letter-spacing: 0.06em; text-transform: uppercase;
+      position: relative; z-index: 1;
+    }
+    .media-caption {
+      font-size: var(--text-xs); color: var(--c-neutral);
+      padding: var(--space-sm) var(--space-md); text-align: center;
+      border-top: 1px solid var(--c-rule);
+    }
+
+    /* ═══ INTEGRATION DOCK (ZoeyOS-style) ═══ */
+    .dock {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; padding: var(--space-xl) 0; flex-wrap: wrap;
+    }
+    .dock__icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--c-surface); border: 1px solid var(--c-rule);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.3s;
+      cursor: default;
+    }
+    .dock__icon:hover {
+      transform: scale(1.2) translateY(-8px);
+      border-color: var(--c-accent);
+      box-shadow: 0 12px 32px -6px rgba(139,92,246,0.3);
+    }
+    .dock__icon img { width: 28px; height: 28px; border-radius: 4px; }
+
+    /* ═══ PRICING ═══ */
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); }
+    .price-card {
+      background: var(--c-surface); border-radius: 16px; padding: var(--space-xl);
+      display: flex; flex-direction: column; gap: var(--space-md);
+      border: 1px solid var(--c-rule);
+      transition: box-shadow 0.25s, transform 0.2s, border-color 0.3s;
+    }
+    .price-card:hover {
+      box-shadow: 0 8px 32px -8px rgba(139,92,246,0.12); transform: translateY(-2px);
+    }
+    .price-card--featured {
+      border-color: var(--c-accent); background: var(--c-surface-2);
+      box-shadow: 0 0 40px -12px rgba(139,92,246,0.2);
+    }
+    .price-card__name {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-accent);
+    }
+    .price-card__price {
+      font-family: var(--font-display); font-size: var(--text-3xl);
+      font-weight: 700; letter-spacing: -0.02em;
+    }
+    .price-card__price span { font-size: var(--text-sm); font-weight: 400; color: var(--c-muted); }
+    .price-card__desc { font-size: var(--text-sm); color: var(--c-muted); line-height: 1.5; }
+    .price-card__features { display: flex; flex-direction: column; gap: var(--space-sm); flex: 1; }
+    .price-card__features li {
+      font-size: var(--text-sm); color: var(--c-muted);
+      padding-left: 1.2em; position: relative;
+    }
+    .price-card__features li::before {
+      content: "\2014"; position: absolute; left: 0; color: var(--c-accent);
+    }
+    .price-card__cta {
+      display: block; text-align: center; padding: 0.65rem 1rem;
+      border-radius: 999px; font-weight: 500; font-size: var(--text-sm);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .price-card__cta--outline { border: 1px solid var(--c-rule); color: var(--c-ink); }
+    .price-card__cta--outline:hover { border-color: var(--c-accent); color: var(--c-accent); }
+    .price-card__cta--fill { background: var(--c-accent); color: var(--c-void); }
+    .price-card__cta--fill:hover { background: var(--c-accent-dim); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+
+    /* ═══ DOWNLOAD ═══ */
+    .download { text-align: center; padding: var(--space-4xl) var(--gutter); max-width: 800px; margin: 0 auto; }
+    .download__title {
+      font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700; line-height: 1.08; letter-spacing: -0.025em;
+      margin-bottom: var(--space-lg);
+    }
+    .download__sub {
+      font-size: var(--text-md); color: var(--c-muted);
+      max-width: 45ch; margin: 0 auto var(--space-2xl); line-height: 1.6;
+    }
+    .download__platforms { display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap; }
+    .platform-btn {
+      display: inline-flex; align-items: center; gap: var(--space-sm);
+      padding: 0.85rem 1.75rem; border-radius: 999px; font-weight: 500;
+      font-size: var(--text-base); cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+      border: none; font-family: var(--font-body);
+    }
+    .platform-btn--primary { background: var(--c-accent); color: var(--c-void); }
+    .platform-btn--primary:hover {
+      background: var(--c-accent-dim);
+      box-shadow: 0 0 30px rgba(139,92,246,0.35); transform: translateY(-1px);
+    }
+    .platform-btn--secondary { background: var(--c-surface); color: var(--c-ink); border: 1px solid var(--c-rule); }
+    .platform-btn--secondary:hover { border-color: var(--c-accent); box-shadow: 0 4px 16px -4px rgba(139,92,246,0.15); transform: translateY(-1px); }
+    .platform-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+    /* ═══ STICKY BOTTOM CTA BAR ═══ */
+    .sticky-cta {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+      padding: 0.75rem var(--gutter); display: flex; align-items: center;
+      justify-content: center; gap: var(--space-md);
+      background: rgba(6,6,10,0.85); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--c-rule);
+      transform: translateY(100%); transition: transform 0.4s ease;
+    }
+    .sticky-cta.visible { transform: translateY(0); }
+    .sticky-cta__text {
+      font-size: var(--text-sm); color: var(--c-muted);
+    }
+    .sticky-cta__btn {
+      padding: 0.5rem 1.25rem; border-radius: 999px; font-weight: 500;
+      font-size: var(--text-sm); background: var(--c-accent); color: var(--c-void);
+      border: none; cursor: pointer; font-family: var(--font-body);
+      transition: background 0.2s;
+    }
+    .sticky-cta__btn:hover { background: var(--c-accent-dim); }
+
+    /* ═══ FOOTER ═══ */
+    .foot {
+      padding: var(--space-4xl) var(--gutter) var(--space-xl);
+      max-width: var(--max-w); margin: 0 auto; text-align: center;
+      overflow: hidden;
+    }
+    .foot__brand {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: clamp(2.5rem, 10vw, 7rem); line-height: 0.95;
+      letter-spacing: -0.03em; margin-bottom: var(--space-2xl);
+      background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.15) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .foot__line {
+      font-family: var(--font-display); font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 700; line-height: 1.2; letter-spacing: -0.02em;
+      max-width: 40ch; margin: 0 auto var(--space-2xl); color: var(--c-muted);
+    }
+    .foot__meta {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding-block-start: var(--space-md); border-top: 1px solid var(--c-rule);
+      flex-wrap: wrap; gap: var(--space-md);
+    }
+    .foot__wordmark {
+      font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm);
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-accent);
+    }
+    .foot__copy { font-size: var(--text-xs); color: var(--c-neutral); }
+    .foot__links { display: flex; gap: var(--space-lg); }
+    .foot__links a { font-size: var(--text-xs); color: var(--c-neutral); transition: color 0.2s; }
+    .foot__links a:hover { color: var(--c-ink); }
+
+    /* ═══ SCROLL REVEAL ═══ */
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 960px) {
+      .bento { grid-template-columns: repeat(2, 1fr); }
+      .span-2x2 { grid-column: span 2; grid-row: span 1; }
+      .span-1x2 { grid-row: span 1; }
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+      .split { grid-template-columns: 1fr; gap: var(--space-2xl); }
+      .split--reverse { direction: ltr; }
+      .hero__side { display: none; }
+      .hero__video-wrap { width: 80vw; }
+    }
+    @media (max-width: 768px) {
+      .nav__links { display: none; }
+      .nav__hamburger { display: block; }
+      .nav__mobile { display: flex; }
+    }
+    @media (max-width: 640px) {
+      .bento { grid-template-columns: 1fr; }
+      .span-2x2, .span-2x1 { grid-column: span 1; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .hero__display { max-width: 100%; }
+      .hero__actions { flex-direction: column; align-items: center; }
+      .hero__stats { gap: var(--space-xl); }
+      .hero__video-wrap { width: 92vw; border-radius: 12px; min-height: 200px; }
+      .download__platforms { flex-direction: column; align-items: center; }
+      .foot__meta { flex-direction: column; }
+      .sticky-cta__text { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .grain::before { animation: none; }
+      .ticker__track { animation: none; }
+      .reveal, .hero__badge, .hero__sub, .hero__devices, .hero__frame, .hero__panel--left, .hero__panel--right, .foot__brand, .hero__display .hl-char {
+        opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important;
+      }
+      .scroll-hint__line { animation: none; opacity: 0.5; }
+      .star { animation: none; opacity: 0.5; }
+      .shooting-star { animation: none; }
+    }
+
+    /* COOKIE CONSENT */
+    .cookie-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(10,10,16,0.96); border-top: 1px solid var(--c-rule);
+      padding: 1rem var(--gutter); display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      transform: translateY(100%); transition: transform 0.4s ease;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .cookie-banner.show { transform: translateY(0); }
+    .cookie-banner p { font-size: 0.82rem; color: var(--c-muted); margin: 0; flex: 1; min-width: 200px; }
+    .cookie-banner a { color: var(--c-accent); }
+    .cookie-btns { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .cookie-btns button {
+      font-family: var(--font-body); font-size: 0.78rem; font-weight: 500;
+      padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--c-rule); background: transparent; color: var(--c-muted);
+      transition: all 0.2s;
+    }
+    .cookie-btns button:hover { border-color: var(--c-accent); color: var(--c-ink); }
+    .cookie-btns .cookie-accept {
+      background: var(--c-accent); color: #fff; border-color: var(--c-accent);
+    }
+    .cookie-btns .cookie-accept:hover { opacity: 0.85; }
+    @media (max-width: 640px) {
+      .cookie-banner { flex-direction: column; align-items: stretch; }
+      .cookie-btns { justify-content: stretch; }
+      .cookie-btns button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Perspective Grid -->
+  <div class="grid-3d"><div class="grid-3d__plane"></div></div>
+
+  <!-- Star Field -->
+  <div class="star-field" id="star-field"></div>
+
+  <!-- Background layers -->
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div class="corner-glow corner-glow--tl"></div>
+  <div class="corner-glow corner-glow--br"></div>
+
+  <div class="page">
+
+    <!-- Nav -->
+    <nav class="nav glass" aria-label="Primary">
+      <a class="nav__logo" href="#">
+        <img src="logo.jpg" alt="UmbraOS" class="nav__logo-img">
+        <span>UMBRA_OS</span>
+      </a>
+      <div class="nav__links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#download">Download</a>
+      </div>
+      <a href="#download" class="nav__cta">Get UmbraOS</a>
+      <button class="nav__hamburger" id="nav-hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+
+    <!-- Mobile nav -->
+    <div class="nav__mobile" id="nav-mobile">
+      <a href="#features" class="nav__mobile-link">Features</a>
+      <a href="#how-it-works" class="nav__mobile-link">How it works</a>
+      <a href="#download" class="nav__mobile-link">Download</a>
+      <a href="privacy-policy.html" class="nav__mobile-link">Privacy</a>
+      <a href="terms-conditions.html" class="nav__mobile-link">Terms</a>
+      <a href="#download" class="btn-primary" style="margin-top:1rem;">Get UmbraOS</a>
+    </div>
+
+    <!-- Hero — Download First -->
+    <header class="hero">
+      <div class="hero__stage">
+        <div class="hero__side hero__side--left">
+          <div class="hero__side-dot"></div>
+          <div class="hero__side-line hero__side-line--long"></div>
+          <span class="hero__side-text">Local-first<br>Your choice</span>
+          <div class="hero__side-line"></div>
+          <div class="hero__side-dot"></div>
+          <span class="hero__side-text">DPAPI<br>AES-256</span>
+        </div>
+        <div class="hero__video-wrap">
+          <div class="media-frame" style="border:none;box-shadow:none;">
+            <div class="media-frame__chrome">
+              <span class="media-frame__dot"></span>
+              <span class="media-frame__dot"></span>
+              <span class="media-frame__dot"></span>
+            </div>
+            <div class="media-frame__body">
+              <video class="hero__video" autoplay muted loop playsinline>
+                <source src="hero-video.mp4" type="video/mp4">
+              </video>
+              <div class="hero__overlay"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero__side hero__side--right">
+          <div class="hero__side-dot"></div>
+          <div class="hero__side-line hero__side-line--long"></div>
+          <span class="hero__side-text">Infinite agents<br>Native code</span>
+          <div class="hero__side-line"></div>
+          <div class="hero__side-dot"></div>
+          <span class="hero__side-text">1,000+ MCP<br>Desktop 2</span>
+        </div>
+      </div>
+      <img src="logo.jpg" alt="" class="hero__logo" aria-hidden="true">
+      <div class="hero__badge glass reveal">
+        <span class="hero__badge-dot"></span>
+        Local-first AI operating system
+      </div>
+      <h1 class="hero__display" aria-label="AI that runs on your machine.">
+        <span class="hl-char" style="--i:0">A</span><span class="hl-char" style="--i:1">I</span><span class="hl-char" style="--i:2"> </span><span class="hl-char" style="--i:3">t</span><span class="hl-char" style="--i:4">h</span><span class="hl-char" style="--i:5">a</span><span class="hl-char" style="--i:6">t</span><span class="hl-char" style="--i:7"> </span><span class="hl-char" style="--i:8">r</span><span class="hl-char" style="--i:9">u</span><span class="hl-char" style="--i:10">n</span><span class="hl-char" style="--i:11">s</span><br><span class="hl-char" style="--i:12">o</span><span class="hl-char" style="--i:13">n</span><span class="hl-char" style="--i:14"> </span><span class="hl-char" style="--i:15">y</span><span class="hl-char" style="--i:16">o</span><span class="hl-char" style="--i:17">u</span><span class="hl-char" style="--i:18">r</span><span class="hl-char" style="--i:19"> </span><span class="hl-char" style="--i:20">m</span><span class="hl-char" style="--i:21">a</span><span class="hl-char" style="--i:22">c</span><span class="hl-char" style="--i:23">h</span><span class="hl-char" style="--i:24">i</span><span class="hl-char" style="--i:25">n</span><span class="hl-char" style="--i:26">e</span><span class="hl-char" style="--i:27">.</span>
+      </h1>
+      <p class="hero__sub reveal reveal-d2">
+        No subscriptions. UmbraOS runs on your hardware or in the cloud — your choice. It learns your workflows.
+      </p>
+      <div class="hero__devices reveal reveal-d3">
+        <a href="#" class="device-btn device-btn--primary">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+          <div class="device-btn__text">
+            <span class="device-btn__label">Download for</span>
+            <span class="device-btn__platform">Windows</span>
+          </div>
+        </a>
+        <a href="#" class="device-btn">
+           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <div class="device-btn__text">
+            <span class="device-btn__label">Download for</span>
+            <span class="device-btn__platform">macOS</span>
+          </div>
+        </a>
+        <a href="#" class="device-btn">
+           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.43.199.025.399-.008.596-.07a.424.424 0 00.123-.037c.26-.135.478-.4.69-.668.166-.268.327-.4.5-.668.164-.264.328-.534.6-.666a.424.424 0 01.176-.065c.199-.02.399-.008.595.034.096.022.196.052.295.092v-.006c.172.102.308.286.456.473.136.199.267.4.417.537.145.135.327.2.51.167a.424.424 0 00.135-.066c.26-.168.44-.467.6-.668.117-.2.259-.363.437-.466.172-.102.358-.142.558-.134h.005c.224.015.453.066.687.158.238.097.495.243.76.435.197.146.383.33.559.534.197.2.352.4.526.534.169.135.353.2.545.2.2 0 .392-.065.574-.2.192-.134.373-.335.558-.534.176-.199.344-.399.533-.534.184-.135.382-.2.589-.134.207.066.414.2.621.399.197.199.379.466.566.666.187.2.378.334.585.334.207 0 .413-.135.62-.334.177-.167.353-.4.547-.6.199-.2.4-.334.62-.4.224-.066.453-.066.685 0 .231.066.453.2.628.334.167.135.332.267.5.334h.003c.332.133.663.133.995 0 .333-.135.664-.4.996-.668.333-.267.664-.534.996-.668.328-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.332.133.664.133.996 0 .332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.327-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.173.066.347.1.52.1h.002c.173 0 .346-.034.52-.1.332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.164-.066.332-.1.498-.1"/></svg>
+          <div class="device-btn__text">
+            <span class="device-btn__label">Download for</span>
+            <span class="device-btn__platform">Linux</span>
+          </div>
+        </a>
+      </div>
+      <div class="hero__stats reveal reveal-d3">
+        <div class="hero__stat">
+          <div class="hero__stat-num">&lt;150 MB</div>
+          <div class="hero__stat-label">Total RAM</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-num">1,000+</div>
+          <div class="hero__stat-label">Integrations</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-num">90%</div>
+          <div class="hero__stat-label">Cost reduction</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-num">0</div>
+          <div class="hero__stat-label">Cloud servers</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scroll Hint -->
+    <div class="scroll-hint">
+      <div class="scroll-hint__line"></div>
+    </div>
+
+    <!-- Word Ticker -->
+    <div class="ticker">
+      <div class="ticker__track">
+        <span>Automate</span><span>Protect</span><span>Compile</span><span>Remember</span>
+        <span>Integrate</span><span>Delegate</span><span>Secure</span><span>Execute</span>
+        <span>Observe</span><span>Connect</span><span>Encrypt</span><span>Accelerate</span>
+        <span>Automate</span><span>Protect</span><span>Compile</span><span>Remember</span>
+        <span>Integrate</span><span>Delegate</span><span>Secure</span><span>Execute</span>
+        <span>Observe</span><span>Connect</span><span>Encrypt</span><span>Accelerate</span>
+      </div>
+    </div>
+
+    <!-- How It Works — Split layout -->
+    <section class="section" id="how-it-works">
+      <div class="split">
+        <div class="split__text">
+          <p class="section__label reveal">How it works</p>
+          <h2 class="section__title reveal reveal-d1">Simple idea.<br><span class="text-accent">Powerful result.</span></h2>
+          <p class="section__desc reveal reveal-d2">
+            UmbraOS sits on your computer like a second brain. It reads your screen, understands your apps, and works for you — locally or in the cloud, your choice.
+          </p>
+        </div>
+        <div class="split__visual">
+          <div class="pillars">
+            <div class="pillar reveal">
+              <span class="pillar__num">01</span>
+              <div class="pillar__content">
+                <h3>Runs where you want</h3>
+                <p>Run AI locally on your machine for maximum privacy, or use the cloud for more power. You choose what goes where.</p>
+              </div>
+            </div>
+            <div class="pillar reveal reveal-d1">
+              <span class="pillar__num">02</span>
+              <div class="pillar__content">
+                <h3>Use any AI model</h3>
+                <p>Connect your own API keys for Claude, GPT-4o, or others. Or use built-in local models — no API key required.</p>
+              </div>
+            </div>
+            <div class="pillar reveal reveal-d2">
+              <span class="pillar__num">03</span>
+              <div class="pillar__content">
+                <h3>Learns as you work</h3>
+                <p>Remembers your preferences, files, and habits. The more you use it, the smarter it gets — without asking twice.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Showcase — Media Frame -->
+    <section class="section">
+      <div class="split split--reverse">
+        <div class="split__text">
+          <p class="section__label reveal">Background tasks</p>
+          <h2 class="section__title reveal reveal-d1">Works while<br><span class="text-accent">you work.</span></h2>
+          <p class="section__desc reveal reveal-d2">
+            UmbraOS opens a hidden second screen where it handles tasks in the background — checking email, organising files, browsing the web — without interrupting what you're doing.
+          </p>
+        </div>
+        <div class="split__visual reveal reveal-d2">
+          <div class="media-frame">
+            <div class="media-frame__chrome">
+              <span class="media-frame__dot"></span>
+              <span class="media-frame__dot"></span>
+              <span class="media-frame__dot"></span>
+            </div>
+            <div class="media-frame__body">
+              <div class="media-frame__glow"></div>
+              <span class="media-frame__label">Desktop 2 — Background Workspace</span>
+            </div>
+          </div>
+          <p class="media-caption">Your main screen stays free. UmbraOS works silently behind the scenes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features — Bento Grid -->
+    <section class="section" id="features">
+      <p class="section__label reveal">Features</p>
+      <h2 class="section__title reveal reveal-d1">Everything you need.</h2>
+      <p class="section__desc reveal reveal-d2">
+        Private AI that actually does things — not just chats. Here's what UmbraOS can do.
+      </p>
+
+      <div class="bento">
+        <article class="bento__cell span-2x2 reveal" style="--card-color:#8b5cf6;">
+          <span class="bento__cell-num">01</span>
+          <h3 class="bento__cell-title">Run multiple AI agents at once</h3>
+          <p class="bento__cell-desc">One agent watches your email. Another writes code. Another organises files. They all work at the same time without slowing each other down.</p>
+          <p class="bento__cell-tech">Isolated processes · Shared memory · Under 150 MB RAM</p>
+        </article>
+        <article class="bento__cell reveal reveal-d1" style="--card-color:#3b82f6;">
+          <span class="bento__cell-num">02</span>
+          <h3 class="bento__cell-title">Bring your own AI models</h3>
+          <p class="bento__cell-desc">Use Claude, GPT-4o, or any provider with your own API keys. No middleman, no markup. Or use free built-in models.</p>
+          <p class="bento__cell-tech">BYOK · Hybrid cloud + local · Zero markup</p>
+        </article>
+        <article class="bento__cell reveal reveal-d2" style="--card-color:#22c55e;">
+          <span class="bento__cell-num">03</span>
+          <h3 class="bento__cell-title">Pay less for AI</h3>
+          <p class="bento__cell-desc">Smart compression cuts your AI costs. Removes filler, compresses context, and only sends what matters to the model.</p>
+          <p class="bento__cell-tech">Smart pruning · Prompt compression · Near-zero cost</p>
+        </article>
+        <article class="bento__cell span-2x1 reveal" style="--card-color:#f59e0b;">
+          <span class="bento__cell-num">04</span>
+          <h3 class="bento__cell-title">Turn tasks into apps</h3>
+          <p class="bento__cell-desc">Teach it once, it remembers. Repetitive tasks get compiled into fast native programs — no more paying for AI every time.</p>
+          <p class="bento__cell-tech">Auto code generation · Local .exe/.dll · Instant speed</p>
+        </article>
+        <article class="bento__cell reveal" style="--card-color:#ef4444;">
+          <span class="bento__cell-num">05</span>
+          <h3 class="bento__cell-title">Encrypted password vault</h3>
+          <p class="bento__cell-desc">Store passwords, API keys, and tokens on your machine. Encrypted with your hardware — only you can access them.</p>
+          <p class="bento__cell-tech">Hardware encryption · AES-256 · Your device only</p>
+        </article>
+        <article class="bento__cell reveal reveal-d1" style="--card-color:#06b6d4;">
+          <span class="bento__cell-num">06</span>
+          <h3 class="bento__cell-title">Hidden background screen</h3>
+          <p class="bento__cell-desc">A secret second desktop where AI works for you — opening files, browsing, filling spreadsheets — without taking over your screen.</p>
+          <p class="bento__cell-tech">Virtual desktop · Zero interruption · Always hidden</p>
+        </article>
+        <article class="bento__cell reveal reveal-d2" style="--card-color:#ec4899;">
+          <span class="bento__cell-num">07</span>
+          <h3 class="bento__cell-title">Control from your phone</h3>
+          <p class="bento__cell-desc">Check on your AI agents from your phone. See what they're doing, give new tasks, all through a secure connection.</p>
+          <p class="bento__cell-tech">Phone app · Direct connection · Secure</p>
+        </article>
+        <article class="bento__cell span-1x2 reveal" style="--card-color:#a855f7;">
+          <span class="bento__cell-num">08</span>
+          <h3 class="bento__cell-title">Memory that never forgets</h3>
+          <p class="bento__cell-desc">Your preferences, files, and habits are saved automatically. UmbraOS remembers everything so you never have to explain twice.</p>
+          <p class="bento__cell-tech">Local database · Smart search · Instant recall</p>
+        </article>
+        <article class="bento__cell reveal" style="--card-color:#14b8a6;">
+          <span class="bento__cell-num">09</span>
+          <h3 class="bento__cell-title">Watch and learn from you</h3>
+          <p class="bento__cell-desc">Highlight text for instant explanations. Or say "take over" and UmbraOS will do the task exactly how you would.</p>
+          <p class="bento__cell-tech">Screen capture · Live analysis · Learn your style</p>
+        </article>
+        <article class="bento__cell span-2x1 reveal reveal-d1" style="--card-color:#f97316;">
+          <span class="bento__cell-num">10</span>
+          <h3 class="bento__cell-title">Connect to 1,000+ apps</h3>
+          <p class="bento__cell-desc">Works with Discord, Notion, GitHub, email, and hundreds more. Send messages, update projects, manage files — all automated.</p>
+          <p class="bento__cell-tech">Universal connectors · Instant setup · Works everywhere</p>
+        </article>
+        <article class="bento__cell reveal" style="--card-color:#eab308;">
+          <span class="bento__cell-num">11</span>
+          <h3 class="bento__cell-title">Join your meetings</h3>
+          <p class="bento__cell-desc">Joins Zoom, Meet, or Teams calls. Listens, finds answers from your files, and can even speak for you with a synthetic voice.</p>
+          <p class="bento__cell-tech">Video calls · Live listening · Synthetic voice</p>
+        </article>
+        <article class="bento__cell reveal reveal-d1" style="--card-color:#6366f1;">
+          <span class="bento__cell-num">12</span>
+          <h3 class="bento__cell-title">Virtual phone number</h3>
+          <p class="bento__cell-desc">Get a dedicated number for AI-powered calls, texts, and notifications. Available on the Ultimate plan.</p>
+          <p class="bento__cell-tech">Phone number · SMS · AI calls · 24/7 availability</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Integrations Dock -->
+    <section class="section" style="padding-top:var(--space-3xl);">
+      <div class="container" style="text-align:center;">
+        <p class="section__label reveal">Integrations</p>
+        <h2 class="section__title reveal reveal-d1" style="max-width:none;">Connect to <span class="text-accent">1,000+</span> platforms</h2>
+        <p class="section__desc reveal reveal-d2" style="max-width:50ch;margin:0 auto var(--space-2xl);">Via the Model Context Protocol. Your AI agents work directly inside the tools you already use.</p>
+        <div class="dock reveal reveal-d3">
+          <div class="dock__icon" style="--d:0"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://mail.google.com&size=128" alt="Gmail" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:1"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://calendar.google.com&size=128" alt="Calendar" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:2"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://drive.google.com&size=128" alt="Drive" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:3"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://slack.com&size=128" alt="Slack" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:4"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://notion.so&size=128" alt="Notion" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:5"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://github.com&size=128" alt="GitHub" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:6"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://linear.app&size=128" alt="Linear" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:7"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://discord.com&size=128" alt="Discord" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:8"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://telegram.org&size=128" alt="Telegram" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:9"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dropbox.com&size=128" alt="Dropbox" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:10"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://outlook.com&size=128" alt="Outlook" width="28" height="28"></div>
+          <div class="dock__icon" style="--d:11"><img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://stripe.com&size=128" alt="Stripe" width="28" height="28"></div>
+        </div>
+        <p class="reveal" style="font-size:var(--text-xs);color:var(--c-neutral);margin-top:var(--space-lg);font-style:italic;">Logos shown for illustration. UmbraOS is not affiliated with these companies.</p>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section class="download" id="download">
+      <h2 class="download__title reveal">Try it free.</h2>
+      <p class="download__sub reveal reveal-d1">
+        Download UmbraOS. No account needed. No data collected. Just install and go.
+      </p>
+      <div class="download__platforms reveal reveal-d2">
+        <a href="#" class="platform-btn platform-btn--primary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+          Windows
+        </a>
+        <a href="#" class="platform-btn platform-btn--secondary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          macOS
+        </a>
+        <a href="#" class="platform-btn platform-btn--secondary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.43.199.025.399-.008.596-.07a.424.424 0 00.123-.037c.26-.135.478-.4.69-.668.166-.268.327-.4.5-.668.164-.264.328-.534.6-.666a.424.424 0 01.176-.065c.199-.02.399-.008.595.034.096.022.196.052.295.092v-.006c.172.102.308.286.456.473.136.199.267.4.417.537.145.135.327.2.51.167a.424.424 0 00.135-.066c.26-.168.44-.467.6-.668.117-.2.259-.363.437-.466.172-.102.358-.142.558-.134h.005c.224.015.453.066.687.158.238.097.495.243.76.435.197.146.383.33.559.534.197.2.352.4.526.534.169.135.353.2.545.2.2 0 .392-.065.574-.2.192-.134.373-.335.558-.534.176-.199.344-.399.533-.534.184-.135.382-.2.589-.134.207.066.414.2.621.399.197.199.379.466.566.666.187.2.378.334.585.334.207 0 .413-.135.62-.334.177-.167.353-.4.547-.6.199-.2.4-.334.62-.4.224-.066.453-.066.685 0 .231.066.453.2.628.334.167.135.332.267.5.334h.003c.332.133.663.133.995 0 .333-.135.664-.4.996-.668.333-.267.664-.534.996-.668.328-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.332.133.664.133.996 0 .332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.327-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.173.066.347.1.52.1h.002c.173 0 .346-.034.52-.1.332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.164-.066.332-.1.498-.1"/></svg>
+          Linux
+        </a>
+        <a href="#" class="platform-btn platform-btn--secondary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Documentation
+        </a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="foot">
+      <div class="foot__brand">UMBRA_OS</div>
+      <p class="foot__line reveal">AI that works for you, not the other way around.</p>
+      <div class="foot__meta">
+        <div class="foot__links">
+          <a href="#">GitHub</a>
+          <a href="#">Docs</a>
+          <a href="privacy-policy.html">Privacy</a>
+          <a href="terms-conditions.html">Terms</a>
+          <a href="cookie-policy.html">Cookies</a>
+          <a href="refund-policy.html">Refunds</a>
+        </div>
+        <span class="foot__copy">&copy; 2026 UmbraOS. [YOUR ENTITY NAME]. [YOUR LOCATION]. Contact: [YOUR EMAIL].</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Sticky bottom CTA -->
+  <div class="sticky-cta" id="sticky-cta">
+    <span class="sticky-cta__text">Download UmbraOS — it's free.</span>
+    <a href="#download" class="sticky-cta__btn">Download UmbraOS</a>
+  </div>
+
+  <script>
+  // ═══ STAR FIELD GENERATOR ═══
+  (() => {
+    const field = document.getElementById('star-field');
+    if (!field) return;
+    const count = 80;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2 + 1;
+      s.style.cssText = `
+        left:${Math.random()*100}%; top:${Math.random()*100}%;
+        --s:${size}px; --min:${0.1+Math.random()*0.2}; --max:${0.5+Math.random()*0.5};
+        --glow:${size*2}px; --dur:${2+Math.random()*4}s; --delay:${Math.random()*5}s;
+      `;
+      field.appendChild(s);
+    }
+    for (let i = 0; i < 4; i++) {
+      const ss = document.createElement('div');
+      ss.className = 'shooting-star';
+      ss.style.cssText = `
+        left:${10+Math.random()*80}%; top:${5+Math.random()*40}%;
+        --angle:${20+Math.random()*20}deg; --dx:${200+Math.random()*300}px; --dy:${-100-Math.random()*150}px;
+        --dur:${0.8+Math.random()*0.8}s; --delay:${3+Math.random()*8}s;
+      `;
+      field.appendChild(ss);
+    }
+  })();
+
+  // ═══ GSAP REGISTRATION ═══
+  gsap.registerPlugin(ScrollTrigger);
+
+  const EASE = {
+    smooth: 'power3.out',
+    snap: 'back.out(1.4)',
+    elastic: 'elastic.out(1, 0.5)',
+    dramatic: 'power4.out',
+    gentle: 'power2.out'
+  };
+
+  // ═══ HERO LETTER ANIMATION ═══
+  gsap.fromTo('.hero__display .hl-char',
+    { y: -50, opacity: 0, rotateX: 60, scale: 0.8 },
+    {
+      y: 0, opacity: 1, rotateX: 0, scale: 1,
+      duration: 0.6, ease: 'back.out(2)',
+      stagger: { each: 0.04, from: 'center' },
+      delay: 0.5,
+      onComplete: () => gsap.set('.hero__display .hl-char', { clearProps: 'all' })
+    }
+  );
+
+  // ═══ HERO BADGE + SUB + DEVICES ═══
+  gsap.fromTo('.hero__badge', { opacity: 0, y: 15, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, delay: 0.3, ease: EASE.smooth, onComplete: () => gsap.set('.hero__badge', { clearProps: 'all' }) });
+  gsap.fromTo('.hero__sub', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.45, ease: EASE.smooth, onComplete: () => gsap.set('.hero__sub', { clearProps: 'all' }) });
+  gsap.fromTo('.hero__devices', { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.6, ease: EASE.smooth, onComplete: () => gsap.set('.hero__devices', { clearProps: 'all' }) });
+  gsap.fromTo('.hero__frame', { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.9, delay: 0.3, ease: EASE.dramatic, onComplete: () => gsap.set('.hero__frame', { clearProps: 'all' }) });
+  gsap.fromTo('.hero__panel--left', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.7, delay: 0.5, ease: EASE.smooth, onComplete: () => gsap.set('.hero__panel--left', { clearProps: 'all' }) });
+  gsap.fromTo('.hero__panel--right', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.7, delay: 0.55, ease: EASE.smooth, onComplete: () => gsap.set('.hero__panel--right', { clearProps: 'all' }) });
+
+  // ═══ GSAP SCROLL REVEALS ═══
+  gsap.utils.toArray('.reveal').forEach((el) => {
+    const delay = el.classList.contains('reveal-d1') ? 0.1 :
+                  el.classList.contains('reveal-d2') ? 0.2 :
+                  el.classList.contains('reveal-d3') ? 0.3 :
+                  el.classList.contains('reveal-d4') ? 0.4 : 0;
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 88%',
+      onEnter: () => {
+        gsap.to(el, {
+          opacity: 1, y: 0, duration: 0.8, ease: EASE.smooth, delay,
+          onComplete: () => { el.classList.add('visible'); gsap.set(el, { clearProps: 'all' }); }
+        });
+      },
+      once: true
+    });
+  });
+
+  // ═══ GSAP PILLAR CARDS — SLIDE + SCALE ═══
+  ScrollTrigger.batch('.pillar', {
+    onEnter: (batch) => {
+      batch.forEach((el, i) => {
+        gsap.fromTo(el,
+          { opacity: 0, x: -25, scale: 0.97 },
+          { opacity: 1, x: 0, scale: 1, duration: 0.7, ease: EASE.smooth, delay: i * 0.15,
+            onComplete: () => { el.classList.add('visible'); gsap.set(el, { clearProps: 'all' }); }
+          }
+        );
+      });
+    },
+    start: 'top 85%'
+  });
+
+  // ═══ GSAP PARALLAX GRID ═══
+  gsap.to('.grid-3d__plane', {
+    scrollTrigger: { trigger: '.page', start: 'top top', end: 'bottom bottom', scrub: 1.5 },
+    y: -150, ease: 'none'
+  });
+
+  // ═══ GSAP BENTO CARDS — SCALE + FADE ═══
+  ScrollTrigger.batch('.bento__cell', {
+    onEnter: (batch) => {
+      batch.forEach((el, i) => {
+        gsap.fromTo(el,
+          { opacity: 0, y: 30, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: EASE.smooth, delay: i * 0.07,
+            onComplete: () => { el.classList.add('visible'); gsap.set(el, { clearProps: 'all' }); }
+          }
+        );
+      });
+    },
+    start: 'top 85%'
+  });
+
+  // ═══ GSAP DOCK ICONS — BOUNCE IN ═══
+  ScrollTrigger.batch('.dock__icon', {
+    onEnter: (batch) => {
+      batch.forEach((el, i) => {
+        gsap.fromTo(el,
+          { opacity: 0, y: 30, scale: 0.4 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(2.5)', delay: i * 0.05,
+            onComplete: () => { el.classList.add('visible'); gsap.set(el, { clearProps: 'all' }); }
+          }
+        );
+      });
+    },
+    start: 'top 90%'
+  });
+
+  // ═══ GSAP FOOTER BRAND — SCALE UP ═══
+  ScrollTrigger.create({
+    trigger: '.foot__brand',
+    start: 'top 92%',
+    once: true,
+    onEnter: () => {
+      gsap.fromTo('.foot__brand',
+        { opacity: 0, y: 50, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: EASE.dramatic }
+      );
+    }
+  });
+
+  // ═══ HAMBURGER ═══
+  (() => {
+    const btn=document.getElementById('nav-hamburger');
+    const mob=document.getElementById('nav-mobile');
+    btn.addEventListener('click',()=>{btn.classList.toggle('active');mob.classList.toggle('open');});
+    mob.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{btn.classList.remove('active');mob.classList.remove('open');}));
+  })();
+
+  // ═══ STICKY CTA ═══
+  (() => {
+    const bar=document.getElementById('sticky-cta');
+    addEventListener('scroll',()=>{bar.classList.toggle('visible',window.scrollY>600);});
+  })();
+  </script>
+
+  <!-- Cookie Consent Banner -->
+  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie consent">
+    <p>We do not use cookies or tracking. This site uses no analytics. Fonts are loaded from Google. Read our <a href="privacy-policy.html">Privacy Policy</a>.</p>
+    <div class="cookie-btns">
+      <button class="cookie-accept" id="cookie-ok" aria-label="Accept and dismiss cookie banner">Got it</button>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const banner = document.getElementById('cookie-banner');
+      const btn = document.getElementById('cookie-ok');
+      if (!localStorage.getItem('umbraos_cookie_ok')) {
+        setTimeout(() => banner.classList.add('show'), 1200);
+      }
+      btn.addEventListener('click', () => {
+        localStorage.setItem('umbraos_cookie_ok', '1');
+        banner.classList.remove('show');
+      });
+    })();
+  </script>
+</body>
+</html>
