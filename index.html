@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UmbraOS — Your AI, Runs Locally</title>
   <meta name="description" content="AI that runs on your machine or in the cloud. Private, fast, and free. Download UmbraOS for Windows, macOS, and Linux.">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#06060a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="UmbraOS">
+  <link rel="apple-touch-icon" href="./demos/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Syne:wght@600;700;800&family=Geist:wght@350;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -538,6 +545,30 @@
       border-color: var(--c-accent);
       box-shadow: 0 12px 32px -6px rgba(139,92,246,0.3);
     }
+
+    /* ═══ APP SCREENS GALLERY ═══ */
+    .screens {
+      display: flex; gap: var(--space-lg); justify-content: flex-start;
+      overflow-x: auto; padding: var(--space-md) var(--gutter) var(--space-xl);
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    @media (min-width: 1100px) {
+      .screens { justify-content: center; flex-wrap: wrap; overflow: visible; }
+    }
+    .phone {
+      flex: 0 0 auto; width: 200px; scroll-snap-align: center;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 26px; padding: 10px;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.3s;
+    }
+    .phone:hover {
+      transform: translateY(-6px); border-color: var(--c-accent);
+      box-shadow: 0 20px 50px -20px rgba(139,92,246,0.4);
+    }
+    .phone img { display: block; width: 100%; height: auto; border-radius: 18px; background: #000; }
+    .phone__cap { display: block; padding: 0.8rem 0.2rem 0.3rem; font-size: var(--text-xs); color: var(--c-muted); }
+    .phone__cap em { display: block; font-style: normal; color: var(--c-accent); margin-top: 0.25rem; }
     .dock__icon img { width: 28px; height: 28px; border-radius: 4px; }
 
     /* ═══ PRICING ═══ */
@@ -608,6 +639,28 @@
       box-shadow: 0 0 30px rgba(139,92,246,0.35); transform: translateY(-1px);
     }
     .platform-btn--secondary { background: var(--c-surface); color: var(--c-ink); border: 1px solid var(--c-rule); }
+
+    /* ═══ PHONE INSTALL STEPS ═══ */
+    .install-steps {
+      margin: var(--space-2xl) auto 0; max-width: 640px; text-align: left;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: var(--space-xl);
+    }
+    .install-steps__title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .install-steps__sub { font-size: var(--text-sm); color: var(--c-muted); margin-bottom: var(--space-lg); }
+    .install-steps__grid { display: grid; gap: var(--space-md); }
+    @media (min-width: 640px) { .install-steps__grid { grid-template-columns: 1fr 1fr; } }
+    .install-step {
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: var(--space-md);
+    }
+    .install-step > span {
+      display: inline-block; font-family: var(--font-mono); font-size: var(--text-xs);
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-accent); margin-bottom: 0.5rem;
+    }
+    .install-step p { font-size: var(--text-sm); color: var(--c-muted); line-height: 1.6; }
+    .install-step strong { color: var(--c-ink); }
+    .install-steps__note { margin-top: var(--space-md); font-size: var(--text-xs); color: var(--c-neutral); font-style: italic; }
     .platform-btn--secondary:hover { border-color: var(--c-accent); box-shadow: 0 4px 16px -4px rgba(139,92,246,0.15); transform: translateY(-1px); }
     .platform-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
@@ -764,6 +817,7 @@
       </a>
       <div class="nav__links">
         <a href="#features">Features</a>
+        <a href="#screens">App</a>
         <a href="#how-it-works">How it works</a>
         <a href="#download">Download</a>
       </div>
@@ -776,6 +830,7 @@
     <!-- Mobile nav -->
     <div class="nav__mobile" id="nav-mobile">
       <a href="#features" class="nav__mobile-link">Features</a>
+      <a href="#screens" class="nav__mobile-link">App preview</a>
       <a href="#how-it-works" class="nav__mobile-link">How it works</a>
       <a href="#download" class="nav__mobile-link">Download</a>
       <a href="privacy-policy.html" class="nav__mobile-link">Privacy</a>
@@ -830,7 +885,14 @@
         No subscriptions. UmbraOS runs on your hardware or in the cloud — your choice. It learns your workflows.
       </p>
       <div class="hero__devices reveal reveal-d3">
-        <a href="#" class="device-btn device-btn--primary">
+        <a href="#download" class="device-btn device-btn--primary" id="hero-install">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/><path d="M12 6v6m0 0l-2.5-2.5M12 12l2.5-2.5"/></svg>
+          <div class="device-btn__text">
+            <span class="device-btn__label">Install</span>
+            <span class="device-btn__platform">Mobile app</span>
+          </div>
+        </a>
+        <a href="#" class="device-btn">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
           <div class="device-btn__text">
             <span class="device-btn__label">Download for</span>
@@ -1038,6 +1100,41 @@
       </div>
     </section>
 
+    <!-- App Screens -->
+    <section class="section" id="screens">
+      <div class="container" style="text-align:center;">
+        <p class="section__label reveal">App preview</p>
+        <h2 class="section__title reveal reveal-d1" style="max-width:none;">See it <span class="text-accent">in action</span></h2>
+        <p class="section__desc reveal reveal-d2" style="max-width:52ch;margin:0 auto var(--space-2xl);">Real screens from the UmbraOS app. Tap any phone to open that screen as a live interactive demo in your browser.</p>
+        <div class="screens">
+          <a class="phone reveal" href="demos/app.html" target="_blank" rel="noopener">
+            <img src="screens/speak.png" alt="Speak voice mode screen" loading="lazy">
+            <span class="phone__cap">Speak · Voice mode<em>Open app →</em></span>
+          </a>
+          <a class="phone reveal reveal-d1" href="demos/app.html" target="_blank" rel="noopener">
+            <img src="screens/deploy-agent.png" alt="Deploy agent screen" loading="lazy">
+            <span class="phone__cap">Deploy agent<em>Open app →</em></span>
+          </a>
+          <a class="phone reveal reveal-d2" href="demos/app.html" target="_blank" rel="noopener">
+            <img src="screens/task-review.png" alt="Task review screen" loading="lazy">
+            <span class="phone__cap">Task review<em>Open app →</em></span>
+          </a>
+          <a class="phone reveal" href="demos/app.html" target="_blank" rel="noopener">
+            <img src="screens/configure-agent.png" alt="Configure agent screen" loading="lazy">
+            <span class="phone__cap">Configure agent<em>Open app →</em></span>
+          </a>
+          <a class="phone reveal reveal-d1" href="demos/app.html" target="_blank" rel="noopener">
+            <img src="screens/add-connector.png" alt="Add connector screen" loading="lazy">
+            <span class="phone__cap">Add connector<em>Open app →</em></span>
+          </a>
+        </div>
+            <img src="screens/add-connector.png" alt="Add connector screen" loading="lazy">
+            <span class="phone__cap">Add connector<em>Live demo →</em></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- Integrations Dock -->
     <section class="section" style="padding-top:var(--space-3xl);">
       <div class="container" style="text-align:center;">
@@ -1081,10 +1178,29 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.43.199.025.399-.008.596-.07a.424.424 0 00.123-.037c.26-.135.478-.4.69-.668.166-.268.327-.4.5-.668.164-.264.328-.534.6-.666a.424.424 0 01.176-.065c.199-.02.399-.008.595.034.096.022.196.052.295.092v-.006c.172.102.308.286.456.473.136.199.267.4.417.537.145.135.327.2.51.167a.424.424 0 00.135-.066c.26-.168.44-.467.6-.668.117-.2.259-.363.437-.466.172-.102.358-.142.558-.134h.005c.224.015.453.066.687.158.238.097.495.243.76.435.197.146.383.33.559.534.197.2.352.4.526.534.169.135.353.2.545.2.2 0 .392-.065.574-.2.192-.134.373-.335.558-.534.176-.199.344-.399.533-.534.184-.135.382-.2.589-.134.207.066.414.2.621.399.197.199.379.466.566.666.187.2.378.334.585.334.207 0 .413-.135.62-.334.177-.167.353-.4.547-.6.199-.2.4-.334.62-.4.224-.066.453-.066.685 0 .231.066.453.2.628.334.167.135.332.267.5.334h.003c.332.133.663.133.995 0 .333-.135.664-.4.996-.668.333-.267.664-.534.996-.668.328-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.332.133.664.133.996 0 .332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.327-.133.655-.133.983 0 .332.134.664.4.996.668.332.268.664.535.996.668.173.066.347.1.52.1h.002c.173 0 .346-.034.52-.1.332-.134.664-.4.996-.668.332-.267.664-.534.996-.668.164-.066.332-.1.498-.1"/></svg>
           Linux
         </a>
+        <a href="#screens" class="platform-btn platform-btn--secondary">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>
+          Live app demos
+        </a>
         <a href="#" class="platform-btn platform-btn--secondary">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           Documentation
         </a>
+      </div>
+      <div class="install-steps reveal reveal-d3">
+        <h3 class="install-steps__title">Install the mobile app</h3>
+        <p class="install-steps__sub">Early demo build — installs straight to your home screen. No app store needed.</p>
+        <div class="install-steps__grid">
+          <div class="install-step">
+            <span>Android</span>
+            <p>Open this site in Chrome → tap ⋮ → <strong>Add to Home screen</strong> (or <strong>Install app</strong>).</p>
+          </div>
+          <div class="install-step">
+            <span>iPhone</span>
+            <p>Open this site in Safari → tap Share → <strong>Add to Home Screen</strong>.</p>
+          </div>
+        </div>
+        <p class="install-steps__note">Installing needs the hosted site over HTTPS (e.g. GitHub Pages) — it won't trigger from a file on your computer.</p>
       </div>
     </section>
 
@@ -1268,6 +1384,28 @@
   (() => {
     const bar=document.getElementById('sticky-cta');
     addEventListener('scroll',()=>{bar.classList.toggle('visible',window.scrollY>600);});
+  })();
+
+  // ═══ PWA INSTALL (hero button) ═══
+  (() => {
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
+    const btn=document.getElementById('hero-install');
+    if (!btn) return;
+    let deferred=null;
+    const platform=btn.querySelector('.device-btn__platform');
+    window.addEventListener('beforeinstallprompt',(e)=>{
+      e.preventDefault(); deferred=e;
+      if (platform) platform.textContent='Install now';
+    });
+    window.addEventListener('appinstalled',()=>{ deferred=null; if (platform) platform.textContent='Installed ✓'; });
+    btn.addEventListener('click',(e)=>{
+      if (deferred) {
+        e.preventDefault();
+        deferred.prompt();
+        deferred.userChoice.then(()=>{ deferred=null; });
+      }
+      // otherwise falls through to #download install steps (covers iPhone + desktop)
+    });
   })();
   </script>
 
